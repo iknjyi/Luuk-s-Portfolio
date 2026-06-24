@@ -207,14 +207,29 @@ export function ProjectCard({
         role="button"
         tabIndex={0}
         onClick={() => {
+          // Silence THIS card's own preview video synchronously, in the same
+          // click handler, before opening the modal. The global
+          // pauseAllPreviewVideos() call inside openProject() also covers
+          // this card, but pausing it here too removes any dependency on
+          // call order and guarantees there is no audio gap on first open.
+          const video = videoRef.current;
+          if (video) {
+            video.muted = true;
+            video.pause();
+          }
           onBeforeOpen?.();
-          openProject(project, categoryProjects, videoRef.current?.currentTime ?? 0);
+          openProject(project, categoryProjects, video?.currentTime ?? 0);
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
+            const video = videoRef.current;
+            if (video) {
+              video.muted = true;
+              video.pause();
+            }
             onBeforeOpen?.();
-            openProject(project, categoryProjects, videoRef.current?.currentTime ?? 0);
+            openProject(project, categoryProjects, video?.currentTime ?? 0);
           }
         }}
         className="flex h-full w-full flex-col text-left cursor-pointer"
@@ -242,9 +257,12 @@ export function ProjectCard({
                 src={project.videoSrc}
                 autoPlay
                 muted
+                defaultMuted
                 loop
                 playsInline
+                preload="metadata"
                 controls={false}
+                data-preview-video="true"
                 aria-label={`${project.title} looping preview clip`}
               />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(63,176,255,0.18),transparent_55%)]" />

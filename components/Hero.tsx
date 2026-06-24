@@ -221,11 +221,13 @@ export function Hero() {
                 className="absolute inset-0 h-full w-full object-cover"
                 autoPlay
                 muted
+                defaultMuted
                 loop
                 playsInline
                 controls={false}
                 disablePictureInPicture
-                preload="auto"
+                preload="metadata"
+                data-preview-video="true"
               >
                 <source src={VIDEO_SOURCES.heroPreview} type="video/mp4" />
               </video>

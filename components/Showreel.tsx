@@ -88,11 +88,13 @@ export function Showreel() {
               className="absolute inset-0 h-full w-full object-cover"
               autoPlay
               muted
+              defaultMuted
               loop
               playsInline
               controls={false}
               disablePictureInPicture
-              preload="auto"
+              preload="metadata"
+              data-preview-video="true"
               aria-label="Showreel looping preview"
             >
               <source src={VIDEO_SOURCES.showreel} type="video/mp4" />
@@ -103,7 +105,22 @@ export function Showreel() {
                 switch can stop propagation independently. */}
             <button
               type="button"
-              onClick={openShowreel}
+              onClick={() => {
+                // Silence this card's own preview video synchronously before
+                // opening the full-screen modal — same fix pattern as
+                // ProjectCard, so the modal's audible video is never
+                // overlapped by this card's preview audio on first open.
+                // previewAuLuukOn is also reset so that when the preview
+                // resumes playback after the modal closes, it resumes muted
+                // rather than picking back up at full volume.
+                const video = videoRef.current;
+                if (video) {
+                  video.muted = true;
+                  video.pause();
+                }
+                setPreviewAuLuukOn(false);
+                openShowreel();
+              }}
               aria-label="Play showreel"
               className="absolute inset-0 z-10"
             />

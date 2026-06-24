@@ -89,7 +89,7 @@ export function ShowreelModal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-10"
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-3 sm:p-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -109,18 +109,22 @@ export function ShowreelModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.94 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-4xl"
+            className="relative w-full max-w-4xl py-12 sm:py-0"
           >
+            {/* Close button — fixed on mobile so it's always visible and
+                reachable regardless of scroll position; the original
+                `-top-12` placement (now sm:-top-12) is restored on desktop
+                where there's room above the panel. */}
             <button
               onClick={onClose}
               aria-label="Close showreel"
-              className="absolute -top-12 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+              className="fixed right-4 top-4 z-[120] flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70 sm:absolute sm:right-0 sm:top-0 sm:-translate-y-12 sm:bg-white/10 sm:hover:bg-white/20"
             >
               <X className="h-5 w-5" />
             </button>
 
             <div
-              className="relative overflow-hidden rounded-3xl border border-white/10 bg-cine shadow-glow-lg"
+              className="relative max-h-[70svh] overflow-hidden rounded-3xl border border-white/10 bg-cine shadow-glow-lg sm:max-h-none"
               style={{ aspectRatio: '16 / 9' }}
             >
               {/* Gradient fallback — always rendered underneath the video.
