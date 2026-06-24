@@ -98,7 +98,7 @@ const TOAST_MESSAGES = {
 };
 
 function isLowBudgetEligible(projectType: string): boolean {
-  return LOW_BUDGET_ELIGIBLE_TYPES.includes(projectType as ProjectType);
+  return true;
 }
 
 // ============================================================================
