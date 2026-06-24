@@ -32,6 +32,7 @@ import { motion } from 'framer-motion';
 import { Play, Volume2, VolumeX } from 'lucide-react';
 import { useOverlay } from '@/lib/overlay-context';
 import { VIDEO_SOURCES } from '@/lib/videos';
+import { stopAllPreviewVideos } from '@/lib/preview-video';
 import { FadeIn } from './FadeIn';
 
 export function Showreel() {
@@ -42,10 +43,26 @@ export function Showreel() {
   // own auLuuk state. Mirrors the same toggle pattern used on ProjectCard.
   const [previewAuLuukOn, setPreviewAuLuukOn] = useState(false);
 
+  // Same mobile "ghost hover"-adjacent race guard used in ProjectCard: once
+  // a tap starts opening the modal, this ref blocks the muted-sync effect
+  // below from re-applying a stale (pre-click) previewAuLuukOn value before
+  // React's state update has actually settled.
+  const isOpeningRef = useRef(false);
+
   useEffect(() => {
+    if (isOpeningRef.current) return;
     const video = videoRef.current;
     if (!video) return;
     video.muted = !previewAuLuukOn;
+  }, [previewAuLuukOn]);
+
+  // Fallback reset: once previewAuLuukOn has settled back to false (its
+  // natural idle/muted state), the open gesture has fully resolved, so it's
+  // safe to let the muted-sync effect above respond normally again.
+  useEffect(() => {
+    if (!previewAuLuukOn) {
+      isOpeningRef.current = false;
+    }
   }, [previewAuLuukOn]);
 
   return (
@@ -88,11 +105,13 @@ export function Showreel() {
               className="absolute inset-0 h-full w-full object-cover"
               autoPlay
               muted
+              defaultMuted
               loop
               playsInline
               controls={false}
               disablePictureInPicture
-              preload="auto"
+              preload="metadata"
+              data-preview-video="true"
               aria-label="Showreel looping preview"
             >
               <source src={VIDEO_SOURCES.showreel} type="video/mp4" />
@@ -100,10 +119,29 @@ export function Showreel() {
 
             {/* Clickable surface — opens the full-screen modal (auLuuk ON).
                 Sits above the video but below the auLuuk switch so the
-                switch can stop propagation independently. */}
+                switch can stop propagation independently.
+                onPointerDown/onTouchStart fire before any synthetic hover
+                or click on mobile — earliest possible moment to silence
+                every preview video globally, closing the same first-tap
+                audio race fixed in ProjectCard. */}
             <button
               type="button"
-              onClick={openShowreel}
+              onPointerDown={() => {
+                isOpeningRef.current = true;
+                stopAllPreviewVideos();
+              }}
+              onTouchStart={() => {
+                isOpeningRef.current = true;
+                stopAllPreviewVideos();
+              }}
+              onClick={() => {
+                // Belt-and-suspenders (idempotent): stop everything again,
+                // reset this card's own auLuuk state, then open.
+                isOpeningRef.current = true;
+                stopAllPreviewVideos();
+                setPreviewAuLuukOn(false);
+                openShowreel();
+              }}
               aria-label="Play showreel"
               className="absolute inset-0 z-10"
             />

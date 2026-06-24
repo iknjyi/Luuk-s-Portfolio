@@ -187,10 +187,28 @@ export function ProjectModal() {
   const modalAspectRatio = project?.format === 'square' ? '1/1' : '9/16';
   // Square clips are capped on width too, so a 1:1 video doesn't grow as
   // tall (and wide) as a 680px-tall 9:16 reel would.
+  // Mobile-safe sizing: `svh` (small viewport height) is used instead of
+  // `vh` so the box never overflows behind mobile browser chrome (the
+  // address bar). On mobile the box height is capped to ~65–68svh and width
+  // is constrained to the available screen width so a 9:16 video's
+  // *rendered box* always matches its true aspect ratio — that's what lets
+  // `object-contain` show the whole frame with no cropping. Desktop sizing
+  // is unchanged from the original design (the vh/px caps still apply on
+  // larger screens via the `min()`).
   const videoBoxStyle: React.CSSProperties =
     project?.format === 'square'
-      ? { aspectRatio: modalAspectRatio, height: 'min(60vh, 520px)', width: 'auto', maxWidth: 'min(60vh, 520px)' }
-      : { aspectRatio: modalAspectRatio, height: 'min(76vh, 680px)', width: 'auto' };
+      ? {
+          aspectRatio: modalAspectRatio,
+          height: 'min(65svh, 60vh, 520px)',
+          width: 'auto',
+          maxWidth: 'min(90vw, 65svh, 60vh, 520px)',
+        }
+      : {
+          aspectRatio: modalAspectRatio,
+          height: 'min(68svh, 76vh, 680px)',
+          width: 'auto',
+          maxWidth: '90vw',
+        };
 
   const [auLuukOn, setAuLuukOn] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -372,7 +390,7 @@ export function ProjectModal() {
     <AnimatePresence>
       {project && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8"
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-3 sm:p-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -402,13 +420,17 @@ export function ProjectModal() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 12 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="relative flex w-full max-w-[1000px] flex-col overflow-hidden rounded-4xl border border-white/10 bg-white shadow-glow-lg dark:border-sky-400/15 dark:bg-[rgba(10,16,28,0.97)] md:flex-row md:max-h-[90vh]"
+              className="relative flex max-h-[92svh] w-full max-w-[1000px] flex-col overflow-y-auto rounded-4xl border border-white/10 bg-white shadow-glow-lg dark:border-sky-400/15 dark:bg-[rgba(10,16,28,0.97)] md:flex-row md:max-h-[90vh] md:overflow-hidden"
             >
-              {/* Close button */}
+              {/* Close button — fixed near the top with a high z-index so it
+                  always stays reachable even while the panel scrolls on
+                  mobile (sticky would scroll out of view inside this
+                  overflow-y-auto container, so we anchor it to the viewport
+                  instead via fixed positioning at this breakpoint). */}
               <button
                 onClick={closeOverlay}
                 aria-label="Close project details"
-                className="absolute right-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
+                className="fixed right-4 top-4 z-[120] flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70 sm:absolute sm:right-5 sm:top-5 sm:z-10 sm:bg-black/30 sm:hover:bg-black/50"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -423,7 +445,7 @@ export function ProjectModal() {
                     <video
                       key={project.id}
                       ref={videoRef}
-                      className="absolute inset-0 h-full w-full object-cover"
+                      className="absolute inset-0 h-full w-full object-contain md:object-cover"
                       src={project.videoSrc}
                       autoPlay
                       muted={!auLuukOn}
@@ -498,13 +520,15 @@ export function ProjectModal() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 12 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="relative max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-4xl border border-white/10 bg-white shadow-glow-lg dark:border-sky-400/15 dark:bg-[rgba(10,16,28,0.97)]"
+              className="relative max-h-[92svh] w-full max-w-3xl overflow-y-auto rounded-4xl border border-white/10 bg-white shadow-glow-lg dark:border-sky-400/15 dark:bg-[rgba(10,16,28,0.97)] sm:max-h-[88vh]"
             >
-              {/* Close button */}
+              {/* Close button — fixed on mobile so it stays reachable while
+                  this panel scrolls; absolute (original behavior) on desktop
+                  since the panel rarely needs to scroll there. */}
               <button
                 onClick={closeOverlay}
                 aria-label="Close project details"
-                className="absolute right-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
+                className="fixed right-4 top-4 z-[120] flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70 sm:absolute sm:right-5 sm:top-5 sm:z-10 sm:bg-black/30 sm:hover:bg-black/50"
               >
                 <X className="h-5 w-5" />
               </button>
