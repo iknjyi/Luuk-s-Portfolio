@@ -23,7 +23,38 @@
 // to wire up individual refs per component.
 // ============================================================================
 
-const PREVIEW_VIDEO_SELECTOR = '[data-preview-video="true"]';
+const PREVIEW_VIDEO_SELECTOR = 'video[data-preview-video="true"]';
+
+/**
+ * Pause and PERMANENTLY mute every ambient preview video currently in the
+ * DOM. "Permanently" here means we set both the live `muted` property and
+ * `defaultMuted` so that even if something else re-reads the element's
+ * default muted state later, it still comes back muted.
+ *
+ * This must be called as early as physically possible on mobile — ideally
+ * on `onPointerDown` / `onTouchStart`, NOT only on `onClick`. Mobile
+ * browsers synthesize a `mouseenter`/`mouseover` event immediately before
+ * the `click` event fires on a first tap. ProjectCard listens for
+ * `onMouseEnter` to drive its hover-auLuuk feature, so that synthetic
+ * hover event can flip a card's `<video>` back to unmuted via React state
+ * *in between* an early imperative mute and the later `click` handler.
+ * Calling this on the earliest touch event closes that gap — and calling
+ * it again on click is a harmless no-op safety net.
+ *
+ * Safe to call even if no preview videos are mounted, and safe to call
+ * repeatedly/redundantly (idempotent).
+ */
+export function stopAllPreviewVideos(): void {
+  if (typeof document === 'undefined') return; // SSR guard
+
+  document
+    .querySelectorAll<HTMLVideoElement>(PREVIEW_VIDEO_SELECTOR)
+    .forEach((video) => {
+      video.pause();
+      video.muted = true;
+      video.defaultMuted = true;
+    });
+}
 
 /**
  * Pause and re-mute every ambient preview video currently in the DOM.
@@ -32,28 +63,11 @@ const PREVIEW_VIDEO_SELECTOR = '[data-preview-video="true"]';
  * modal or showreel modal), so the about-to-open video is guaranteed to be
  * the only audible/playing video on the page.
  *
- * Safe to call even if no preview videos are mounted (no-op), and safe to
- * call repeatedly (idempotent).
+ * This is kept as an alias of `stopAllPreviewVideos` — same behavior, two
+ * names so existing call sites (overlay-context.tsx) and the naming used
+ * in bug reports / fix requests both resolve to the exact same function.
  */
-export function pauseAllPreviewVideos(): void {
-  if (typeof document === 'undefined') return; // SSR guard
-
-  const videos = document.querySelectorAll<HTMLVideoElement>(PREVIEW_VIDEO_SELECTOR);
-  videos.forEach((video) => {
-    // Mute first so there is no audible blip even if pause() is briefly
-    // delayed by the browser.
-    video.muted = true;
-    video.defaultMuted = true;
-    if (!video.paused) {
-      video.pause();
-    }
-    // We deliberately do NOT reset currentTime to 0 here — rewinding every
-    // ambient preview every time any single card is opened would restart
-    // clips the visitor wasn't even looking at, which is a worse UX than
-    // leaving them paused mid-loop. Each preview resumes from where it left
-    // off once nothing is hovered / once the modal closes.
-  });
-}
+export const pauseAllPreviewVideos = stopAllPreviewVideos;
 
 /**
  * Resume ambient preview videos after a detail/modal view closes.

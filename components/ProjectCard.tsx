@@ -47,6 +47,7 @@ import { motion } from 'framer-motion';
 import { Play, ArrowUpRight, Volume2, VolumeX } from 'lucide-react';
 import type { Project } from '@/lib/data';
 import { useOverlay } from '@/lib/overlay-context';
+import { stopAllPreviewVideos } from '@/lib/preview-video';
 
 interface ProjectCardProps {
   project: Project;
@@ -113,11 +114,31 @@ export function ProjectCard({
   const [hoverAuLuukActive, setHoverAuLuukActive] = useState(false);
 
   // ---------------------------------------------------------------------------
+  // Guards against the mobile "ghost hover" race that caused duplicated
+  // audio on first tap: touch browsers synthesize a `mouseenter` event
+  // immediately before `click` fires. That synthetic mouseenter used to call
+  // setHoverAuLuukActive(true), which re-armed the muted-sync effect below
+  // and flipped this card's video back to UNMUTED right as the modal's own
+  // video started playing — for one frame, both were audible.
+  //
+  // Once a tap starts opening this card (earliest possible touch event), we
+  // flip this ref synchronously so any hover/mouseenter handling that fires
+  // afterward is a no-op. A plain ref (not state) is used deliberately: it
+  // must be readable synchronously inside the very next event handler,
+  // with no re-render delay.
+  // ---------------------------------------------------------------------------
+  const isOpeningRef = useRef(false);
+
+  // ---------------------------------------------------------------------------
   // Sync muted attribute imperatively.
   // AuLuuk is on when EITHER the user manually toggled it OR hover auto-auLuuk
   // turned it on. React doesn't reactively control `muted` via JSX props.
+  // Skipped entirely while a card is mid-open (see isOpeningRef above) so
+  // this effect can never re-unmute a video that stopAllPreviewVideos() just
+  // silenced moments earlier in the same gesture.
   // ---------------------------------------------------------------------------
   useEffect(() => {
+    if (isOpeningRef.current) return;
     const video = videoRef.current;
     if (!video) return;
     video.muted = !(auLuukEnabled || hoverAuLuukActive);
@@ -148,12 +169,26 @@ export function ProjectCard({
   }, [hoveredId, project.id, isVideoPreview]);
 
   // ---------------------------------------------------------------------------
+  // Fallback reset for isOpeningRef on touch devices, where `mouseleave`
+  // never fires after a tap. Once the grid returns to its natural idle
+  // state for this card (nothing hovered, no auLuuk active) we know the
+  // open gesture has fully resolved — whether the modal opened or the user
+  // backed out — so it's safe to let hover/auLuuk behave normally again.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (hoveredId === null && !auLuukEnabled && !hoverAuLuukActive) {
+      isOpeningRef.current = false;
+    }
+  }, [hoveredId, auLuukEnabled, hoverAuLuukActive]);
+
+  // ---------------------------------------------------------------------------
   // Mouse enter: signal hover to parent, turn auLuuk on INSTANTLY (no delay).
   // We only auto-unmute if the user hasn't already manually enabled auLuuk on
   // this card (avoids double-toggling / fighting the manual button state).
   // ---------------------------------------------------------------------------
   const handleMouseEnter = useCallback(() => {
     if (!isVideoPreview) return;
+    if (isOpeningRef.current) return; // ignore ghost-hover during an open in progress
     onHoverChange?.(project.id);
 
     if (!auLuukEnabled) {
@@ -163,9 +198,13 @@ export function ProjectCard({
 
   // ---------------------------------------------------------------------------
   // Mouse leave: turn hover auLuuk off instantly, restore sibling videos.
+  // Also clears isOpeningRef — once the pointer leaves the card (which
+  // happens naturally when returning from the modal, or on a normal
+  // desktop mouse-out), normal hover/auLuuk behavior is safe to resume.
   // ---------------------------------------------------------------------------
   const handleMouseLeave = useCallback(() => {
     if (!isVideoPreview) return;
+    isOpeningRef.current = false;
 
     // Turn off hover-auto auLuuk immediately (manual auLuuk untouched).
     setHoverAuLuukActive(false);
@@ -206,28 +245,38 @@ export function ProjectCard({
       <div
         role="button"
         tabIndex={0}
+        // ─────────────────────────────────────────────────────────────────
+        // onPointerDown / onTouchStart fire BEFORE the synthetic mouseenter
+        // and BEFORE click on mobile. This is the earliest possible moment
+        // to silence every preview video on the page (including this card's
+        // own), closing the race window that caused duplicated audio on the
+        // first tap. isOpeningRef is flipped here too so any hover handling
+        // that still sneaks in afterward is a guaranteed no-op.
+        // ─────────────────────────────────────────────────────────────────
+        onPointerDown={() => {
+          isOpeningRef.current = true;
+          stopAllPreviewVideos();
+        }}
+        onTouchStart={() => {
+          isOpeningRef.current = true;
+          stopAllPreviewVideos();
+        }}
         onClick={() => {
-          // Silence THIS card's own preview video synchronously, in the same
-          // click handler, before opening the modal. The global
-          // pauseAllPreviewVideos() call inside openProject() also covers
-          // this card, but pausing it here too removes any dependency on
-          // call order and guarantees there is no audio gap on first open.
+          // Belt-and-suspenders: stop everything again (idempotent) in case
+          // this click was triggered by something other than a real pointer
+          // event (e.g. a synthetic click from assistive tech), then open.
+          isOpeningRef.current = true;
+          stopAllPreviewVideos();
           const video = videoRef.current;
-          if (video) {
-            video.muted = true;
-            video.pause();
-          }
           onBeforeOpen?.();
           openProject(project, categoryProjects, video?.currentTime ?? 0);
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
+            isOpeningRef.current = true;
+            stopAllPreviewVideos();
             const video = videoRef.current;
-            if (video) {
-              video.muted = true;
-              video.pause();
-            }
             onBeforeOpen?.();
             openProject(project, categoryProjects, video?.currentTime ?? 0);
           }
