@@ -936,11 +936,9 @@ export const projectTypes = [
 
 export type ProjectType = (typeof projectTypes)[number];
 
-export type BudgetRange = '$15 to $30' | '$40 to $70' | '$70 to $100' | '$100 to $250' | '$250+' | 'Custom budget';
+export type BudgetRange = '$70 to $100' | '$100 to $250' | '$250+' | 'Custom budget';
 
 export const budgetRanges: BudgetRange[] = [
-  '$15 to $30',
-  '$40 to $70',
   '$70 to $100',
   '$100 to $250',
   '$250+',

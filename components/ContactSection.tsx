@@ -82,10 +82,10 @@ const CONTACT_BUTTONS = [
   label === 'Email' ? true : isValidContactLink(href)
 );
 
-const FALLBACK_BUDGET: BudgetRange = '$40 to $70';
-const LOW_BUDGET: BudgetRange = '$15 to $30';
+const FALLBACK_BUDGET: BudgetRange = '$70 to $100';
+const LOW_BUDGET: BudgetRange = '$70 to $100';
 const CUSTOM_BUDGET: BudgetRange = 'Custom budget';
-const CUSTOM_BUDGET_MIN = 15;
+const CUSTOM_BUDGET_MIN = 70;
 
 const TOAST_MESSAGES = {
   resetByProjectType:
