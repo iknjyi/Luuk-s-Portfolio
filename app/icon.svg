@@ -1,0 +1,66 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Luuk">
+  <defs>
+    <!-- Soft ambient glow behind the letter, sky-blue to match the brand -->
+    <radialGradient id="ambientGlow" cx="50%" cy="46%" r="58%">
+      <stop offset="0%" stop-color="#3FB0FF" stop-opacity="0.55" />
+      <stop offset="55%" stop-color="#1E9AF5" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#1E9AF5" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- The letter itself: light sky-blue at the top fading to a deeper
+         blue at the base, for a glassy, dimensional feel -->
+    <linearGradient id="letterFill" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#D7EEFF" />
+      <stop offset="45%" stop-color="#3FB0FF" />
+      <stop offset="100%" stop-color="#0B7FDB" />
+    </linearGradient>
+
+    <!-- Blur used twice below to build up a soft outer glow around the
+         crisp letter on top -->
+    <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.6" />
+    </filter>
+    <filter id="wideGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5.5" />
+    </filter>
+  </defs>
+
+  <!-- Dark premium backdrop so the sky-blue glow reads clearly in a
+       browser tab at small sizes -->
+  <rect width="64" height="64" rx="16" fill="#06090F" />
+  <rect width="64" height="64" rx="16" fill="url(#ambientGlow)" />
+
+  <!-- Wide soft halo -->
+  <text
+    x="32" y="45"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-weight="700"
+    font-size="36"
+    fill="#3FB0FF"
+    opacity="0.55"
+    filter="url(#wideGlow)"
+  >D</text>
+
+  <!-- Tighter glow pass -->
+  <text
+    x="32" y="45"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-weight="700"
+    font-size="36"
+    fill="#7CC9FF"
+    opacity="0.8"
+    filter="url(#softGlow)"
+  >D</text>
+
+  <!-- Crisp letter on top -->
+  <text
+    x="32" y="45"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-weight="700"
+    font-size="36"
+    fill="url(#letterFill)"
+  >D</text>
+</svg>

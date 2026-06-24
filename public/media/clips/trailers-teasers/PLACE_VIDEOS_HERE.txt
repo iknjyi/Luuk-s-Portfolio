@@ -1,0 +1,11 @@
+Drop your Trailers / Teasers MP4 files in this folder.
+
+Expected filenames (referenced in lib/data.ts):
+  trailer-01.mp4   (16:9 wide clip)
+  teaser-01.mp4    (16:9 wide clip)
+
+You can use different filenames — just update the matching `videoSrc`
+path on each project in lib/data.ts to point at your file instead.
+
+Delete this text file once your real videos are in place (it has no
+effect on the site either way).

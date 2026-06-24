@@ -1,0 +1,12 @@
+Drop your Energetic Edits MP4 files in this folder.
+
+Expected filenames (referenced in lib/data.ts):
+  energetic-wide-01.mp4     (16:9 wide clip)
+  energetic-square-01.mp4   (1:1 square clip)
+  energetic-square-02.mp4   (1:1 square clip)
+
+You can use different filenames — just update the matching `videoSrc`
+path on each project in lib/data.ts to point at your file instead.
+
+Delete this text file once your real videos are in place (it has no
+effect on the site either way).

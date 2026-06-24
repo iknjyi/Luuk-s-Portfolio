@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-paper text-ink antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  /* ── Dark mode base ──────────────────────────────────────────────────────── */
+  html.dark body {
+    background-color: #070B12;
+    color: #E8EEF6;
+  }
+
+  html.dark * {
+    border-color: rgba(56, 189, 248, 0.10);
+  }
+
+  /* Visible, premium keyboard focus ring — never remove focus outlines */
+  :focus-visible {
+    outline: 2px solid #3FB0FF;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Thin, quiet scrollbar — light mode */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #B4E0FF;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #7CC9FF;
+  }
+
+  /* Dark mode scrollbar */
+  html.dark ::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.25);
+  }
+  html.dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.45);
+  }
+
+  /* Respect users who've asked for less motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Timecode-style eyebrow label — the signature motif used across the site */
+  .timecode {
+    @apply font-mono text-[11px] tracking-[0.18em] uppercase text-sky-600;
+  }
+
+  html.dark .timecode {
+    @apply text-sky-400;
+  }
+
+  .section-pad {
+    @apply px-6 sm:px-10 lg:px-16;
+  }
+}
+
+@layer utilities {
+  .mask-edges {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+  }
+}
