@@ -936,11 +936,9 @@ export const projectTypes = [
 
 export type ProjectType = (typeof projectTypes)[number];
 
-export type BudgetRange = '$15 to $30' | '$40 to $70' | '$70 to $100' | '$100 to $250' | '$250+' | 'Custom budget';
+export type BudgetRange = '$70 to $100' | '$100 to $250' | '$250+' | 'Custom budget';
 
 export const budgetRanges: BudgetRange[] = [
-  '$15 to $30',
-  '$40 to $70',
   '$70 to $100',
   '$100 to $250',
   '$250+',
@@ -952,7 +950,7 @@ export const budgetRanges: BudgetRange[] = [
 // explanatory toast on click) and to auto-reset the budget field — with
 // its own toast — if the project type changes away from one of these
 // values while "$15 to $30" is still selected.
-export const LOW_BUDGET_ELIGIBLE_TYPES: ProjectType[] = ['Reels & Shorts', 'Review Video'];
+export const LOW_BUDGET_ELIGIBLE_TYPES: ProjectType[] = [];
 
 // ----------------------------------------------------------------------------
 // Contact form — WhatsApp country codes
